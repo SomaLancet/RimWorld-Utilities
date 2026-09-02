@@ -1,0 +1,12 @@
+.DS_Store
+.idea/
+.build/
+.swiftpm/
+DerivedData/
+dist/
+Products/
+*.app
+*.xctest
+*.dSYM
+xcuserdata/
+*.xcuserstate

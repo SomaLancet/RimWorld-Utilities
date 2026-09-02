@@ -1,0 +1,557 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000002 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppIcon.icns */; };
+		A10000000000000000000003 /* settings.json in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* settings.json */; };
+		A10000000000000000000011 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* Main.swift */; };
+		A10000000000000000000012 /* AnalysisModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* AnalysisModels.swift */; };
+		A10000000000000000000013 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* AppModels.swift */; };
+		A10000000000000000000014 /* XMLReaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000014 /* XMLReaders.swift */; };
+		A10000000000000000000015 /* RimWorldAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000015 /* RimWorldAnalyzer.swift */; };
+		A10000000000000000000016 /* RemoteModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000016 /* RemoteModels.swift */; };
+		A10000000000000000000018 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* AppDelegate.swift */; };
+		A10000000000000000000021 /* RimWorldAnalyzerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000021 /* RimWorldAnalyzerTests.swift */; };
+		A10000000000000000000031 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* SettingsStore.swift */; };
+		A10000000000000000000032 /* PathDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* PathDetectionService.swift */; };
+		A10000000000000000000033 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* UpdateService.swift */; };
+		A10000000000000000000038 /* AppMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000038 /* AppMenu.swift */; };
+		A10000000000000000000039 /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000039 /* MainWindowController.swift */; };
+		A10000000000000000000045 /* ViewFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000045 /* ViewFactory.swift */; };
+		A10000000000000000000047 /* ErrorPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000047 /* ErrorPresenter.swift */; };
+		A10000000000000000000048 /* ControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000048 /* ControllerTests.swift */; };
+		A10000000000000000000049 /* CommandExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000049 /* CommandExecutor.swift */; };
+		A10000000000000000000050 /* TranslationUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000050 /* TranslationUpdateService.swift */; };
+		A10000000000000000000051 /* RJWOperationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000051 /* RJWOperationService.swift */; };
+		A10000000000000000000052 /* ServiceMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000052 /* ServiceMocks.swift */; };
+		A10000000000000000000054 /* RJWCatalogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000054 /* RJWCatalogService.swift */; };
+		A10000000000000000000055 /* ModRemovalService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000055 /* ModRemovalService.swift */; };
+		A10000000000000000000056 /* SaveCleanerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000056 /* SaveCleanerService.swift */; };
+		CD6207492FE9D0A400816FA6 /* ModRemovalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD6207482FE9D0A400816FA6 /* ModRemovalView.swift */; };
+		CD6827932FE9CE4000CE5688 /* CommonViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD6827922FE9CE4000CE5688 /* CommonViews.swift */; };
+		CD6827972FE9CEE200CE5688 /* TranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD6827962FE9CEE200CE5688 /* TranslationView.swift */; };
+		CD6827992FE9CF3400CE5688 /* RJWView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD6827982FE9CF3400CE5688 /* RJWView.swift */; };
+		CD68279B2FE9CFB200CE5688 /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD68279A2FE9CFB200CE5688 /* DiagnosticsView.swift */; };
+		CD87AA2A2FE9D266005D436A /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD87AA292FE9D266005D436A /* WelcomeView.swift */; };
+		CD87AA2C2FE9D27C005D436A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD87AA2B2FE9D27C005D436A /* SettingsView.swift */; };
+		CD87AA2E2FE9D288005D436A /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD87AA2D2FE9D288005D436A /* AboutView.swift */; };
+		CD87AA302FE9D294005D436A /* SavePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD87AA2F2FE9D294005D436A /* SavePickerView.swift */; };
+		CDC2EE772FE9CD52002AE7EA /* ApplicationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC2EE762FE9CD52002AE7EA /* ApplicationModel.swift */; };
+		CDC2EE792FE9CD53002AE7EA /* PreviewSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC2EE782FE9CD53002AE7EA /* PreviewSupport.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A00000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A70000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A50000000000000000000001;
+			remoteInfo = "RimWorld Utilities";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		A20000000000000000000002 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+		A20000000000000000000003 /* settings.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = settings.json; sourceTree = "<group>"; };
+		A20000000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A20000000000000000000007 /* RWU AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "RWU AppIcon.icon"; sourceTree = "<group>"; };
+		A20000000000000000000008 /* RimWorld Utilities.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "RimWorld Utilities.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000011 /* Main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Main.swift; sourceTree = "<group>"; };
+		A20000000000000000000012 /* AnalysisModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisModels.swift; sourceTree = "<group>"; };
+		A20000000000000000000013 /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
+		A20000000000000000000014 /* XMLReaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XMLReaders.swift; sourceTree = "<group>"; };
+		A20000000000000000000015 /* RimWorldAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RimWorldAnalyzer.swift; sourceTree = "<group>"; };
+		A20000000000000000000016 /* RemoteModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteModels.swift; sourceTree = "<group>"; };
+		A20000000000000000000018 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A20000000000000000000019 /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
+		A20000000000000000000021 /* RimWorldAnalyzerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RimWorldAnalyzerTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000022 /* RimWorld UtilitiesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "RimWorld UtilitiesTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000031 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		A20000000000000000000032 /* PathDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathDetectionService.swift; sourceTree = "<group>"; };
+		A20000000000000000000033 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
+		A20000000000000000000038 /* AppMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMenu.swift; sourceTree = "<group>"; };
+		A20000000000000000000039 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
+		A20000000000000000000045 /* ViewFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewFactory.swift; sourceTree = "<group>"; };
+		A20000000000000000000047 /* ErrorPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorPresenter.swift; sourceTree = "<group>"; };
+		A20000000000000000000048 /* ControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000049 /* CommandExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandExecutor.swift; sourceTree = "<group>"; };
+		A20000000000000000000050 /* TranslationUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationUpdateService.swift; sourceTree = "<group>"; };
+		A20000000000000000000051 /* RJWOperationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RJWOperationService.swift; sourceTree = "<group>"; };
+		A20000000000000000000052 /* ServiceMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceMocks.swift; sourceTree = "<group>"; };
+		A20000000000000000000054 /* RJWCatalogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RJWCatalogService.swift; sourceTree = "<group>"; };
+		A20000000000000000000055 /* ModRemovalService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModRemovalService.swift; sourceTree = "<group>"; };
+		A20000000000000000000056 /* SaveCleanerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveCleanerService.swift; sourceTree = "<group>"; };
+		CD6207482FE9D0A400816FA6 /* ModRemovalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModRemovalView.swift; sourceTree = "<group>"; };
+		CD6827922FE9CE4000CE5688 /* CommonViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonViews.swift; sourceTree = "<group>"; };
+		CD6827962FE9CEE200CE5688 /* TranslationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationView.swift; sourceTree = "<group>"; };
+		CD6827982FE9CF3400CE5688 /* RJWView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RJWView.swift; sourceTree = "<group>"; };
+		CD68279A2FE9CFB200CE5688 /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
+		CD87AA292FE9D266005D436A /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		CD87AA2B2FE9D27C005D436A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CD87AA2D2FE9D288005D436A /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		CD87AA2F2FE9D294005D436A /* SavePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavePickerView.swift; sourceTree = "<group>"; };
+		CDC2EE762FE9CD52002AE7EA /* ApplicationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationModel.swift; sourceTree = "<group>"; };
+		CDC2EE782FE9CD53002AE7EA /* PreviewSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewSupport.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A30000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A30000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A40000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A40000000000000000000005 /* App */,
+				A4000000000000000000000B /* Configuration */,
+				A40000000000000000000006 /* Models */,
+				A40000000000000000000007 /* Analysis */,
+				A40000000000000000000008 /* Services */,
+				A40000000000000000000009 /* Views */,
+				A4000000000000000000000A /* Controllers */,
+				A4000000000000000000000C /* Tests */,
+				A20000000000000000000006 /* Info.plist */,
+				A20000000000000000000003 /* settings.json */,
+				A40000000000000000000003 /* Assets */,
+				A40000000000000000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A40000000000000000000003 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000002 /* AppIcon.icns */,
+				A20000000000000000000007 /* RWU AppIcon.icon */,
+			);
+			path = Assets;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000008 /* RimWorld Utilities.app */,
+				A20000000000000000000022 /* RimWorld UtilitiesTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000005 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000011 /* Main.swift */,
+				A20000000000000000000038 /* AppMenu.swift */,
+				A20000000000000000000039 /* MainWindowController.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000006 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000012 /* AnalysisModels.swift */,
+				A20000000000000000000013 /* AppModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000007 /* Analysis */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000014 /* XMLReaders.swift */,
+				A20000000000000000000015 /* RimWorldAnalyzer.swift */,
+			);
+			path = Analysis;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000008 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000016 /* RemoteModels.swift */,
+				A20000000000000000000031 /* SettingsStore.swift */,
+				A20000000000000000000032 /* PathDetectionService.swift */,
+				A20000000000000000000033 /* UpdateService.swift */,
+				A20000000000000000000049 /* CommandExecutor.swift */,
+				A20000000000000000000050 /* TranslationUpdateService.swift */,
+				A20000000000000000000051 /* RJWOperationService.swift */,
+				A20000000000000000000054 /* RJWCatalogService.swift */,
+				A20000000000000000000055 /* ModRemovalService.swift */,
+				A20000000000000000000056 /* SaveCleanerService.swift */,
+				A20000000000000000000047 /* ErrorPresenter.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000009 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000045 /* ViewFactory.swift */,
+				CDC2EE782FE9CD53002AE7EA /* PreviewSupport.swift */,
+				CD6827922FE9CE4000CE5688 /* CommonViews.swift */,
+				CD6827962FE9CEE200CE5688 /* TranslationView.swift */,
+				CD6827982FE9CF3400CE5688 /* RJWView.swift */,
+				CD68279A2FE9CFB200CE5688 /* DiagnosticsView.swift */,
+				CD6207482FE9D0A400816FA6 /* ModRemovalView.swift */,
+				CD87AA292FE9D266005D436A /* WelcomeView.swift */,
+				CD87AA2B2FE9D27C005D436A /* SettingsView.swift */,
+				CD87AA2D2FE9D288005D436A /* AboutView.swift */,
+				CD87AA2F2FE9D294005D436A /* SavePickerView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A4000000000000000000000A /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000018 /* AppDelegate.swift */,
+				CDC2EE762FE9CD52002AE7EA /* ApplicationModel.swift */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
+		A4000000000000000000000B /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000019 /* Version.xcconfig */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
+		A4000000000000000000000C /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				CDFCCE132FE00332009F2BDE /* Unit */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		CDFCCE132FE00332009F2BDE /* Unit */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000021 /* RimWorldAnalyzerTests.swift */,
+				A20000000000000000000048 /* ControllerTests.swift */,
+				A20000000000000000000052 /* ServiceMocks.swift */,
+			);
+			path = Unit;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A50000000000000000000001 /* RimWorld Utilities */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A90000000000000000000002 /* Build configuration list for PBXNativeTarget "RimWorld Utilities" */;
+			buildPhases = (
+				A60000000000000000000001 /* Sources */,
+				A30000000000000000000001 /* Frameworks */,
+				A60000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "RimWorld Utilities";
+			productName = RimWorldUtilities;
+			productReference = A20000000000000000000008 /* RimWorld Utilities.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A50000000000000000000002 /* RimWorld UtilitiesTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A90000000000000000000003 /* Build configuration list for PBXNativeTarget "RimWorld UtilitiesTests" */;
+			buildPhases = (
+				A60000000000000000000003 /* Sources */,
+				A30000000000000000000002 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AB0000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = "RimWorld UtilitiesTests";
+			productName = "RimWorld UtilitiesTests";
+			productReference = A20000000000000000000022 /* RimWorld UtilitiesTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A70000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2650;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					A50000000000000000000001 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					A50000000000000000000002 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = A50000000000000000000001;
+					};
+					A50000000000000000000003 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = A50000000000000000000001;
+					};
+				};
+			};
+			buildConfigurationList = A90000000000000000000001 /* Build configuration list for PBXProject "RimWorld Utilities" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A40000000000000000000001;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A40000000000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A50000000000000000000001 /* RimWorld Utilities */,
+				A50000000000000000000002 /* RimWorld UtilitiesTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A60000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000002 /* AppIcon.icns in Resources */,
+				A10000000000000000000003 /* settings.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A60000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CD87AA2E2FE9D288005D436A /* AboutView.swift in Sources */,
+				CD6827992FE9CF3400CE5688 /* RJWView.swift in Sources */,
+				A10000000000000000000011 /* Main.swift in Sources */,
+				CD6827972FE9CEE200CE5688 /* TranslationView.swift in Sources */,
+				A10000000000000000000012 /* AnalysisModels.swift in Sources */,
+				A10000000000000000000013 /* AppModels.swift in Sources */,
+				A10000000000000000000014 /* XMLReaders.swift in Sources */,
+				A10000000000000000000015 /* RimWorldAnalyzer.swift in Sources */,
+				A10000000000000000000016 /* RemoteModels.swift in Sources */,
+				A10000000000000000000018 /* AppDelegate.swift in Sources */,
+				CD68279B2FE9CFB200CE5688 /* DiagnosticsView.swift in Sources */,
+				A10000000000000000000031 /* SettingsStore.swift in Sources */,
+				CD87AA302FE9D294005D436A /* SavePickerView.swift in Sources */,
+				A10000000000000000000032 /* PathDetectionService.swift in Sources */,
+				A10000000000000000000033 /* UpdateService.swift in Sources */,
+				A10000000000000000000049 /* CommandExecutor.swift in Sources */,
+				A10000000000000000000050 /* TranslationUpdateService.swift in Sources */,
+				CDC2EE772FE9CD52002AE7EA /* ApplicationModel.swift in Sources */,
+				A10000000000000000000051 /* RJWOperationService.swift in Sources */,
+				A10000000000000000000054 /* RJWCatalogService.swift in Sources */,
+				CD6827932FE9CE4000CE5688 /* CommonViews.swift in Sources */,
+				A10000000000000000000055 /* ModRemovalService.swift in Sources */,
+				A10000000000000000000056 /* SaveCleanerService.swift in Sources */,
+				A10000000000000000000047 /* ErrorPresenter.swift in Sources */,
+				CDC2EE792FE9CD53002AE7EA /* PreviewSupport.swift in Sources */,
+				CD87AA2A2FE9D266005D436A /* WelcomeView.swift in Sources */,
+				A10000000000000000000038 /* AppMenu.swift in Sources */,
+				A10000000000000000000039 /* MainWindowController.swift in Sources */,
+				A10000000000000000000045 /* ViewFactory.swift in Sources */,
+				CD87AA2C2FE9D27C005D436A /* SettingsView.swift in Sources */,
+				CD6207492FE9D0A400816FA6 /* ModRemovalView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A60000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000021 /* RimWorldAnalyzerTests.swift in Sources */,
+				A10000000000000000000048 /* ControllerTests.swift in Sources */,
+				A10000000000000000000052 /* ServiceMocks.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AB0000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A50000000000000000000001 /* RimWorld Utilities */;
+			targetProxy = A00000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		A80000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A80000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		A80000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A20000000000000000000019 /* Version.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				EXECUTABLE_NAME = RimWorldUtilities;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = local.rimworld.utilities;
+				PRODUCT_NAME = "RimWorld Utilities";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A80000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A20000000000000000000019 /* Version.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				EXECUTABLE_NAME = RimWorldUtilities;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = local.rimworld.utilities;
+				PRODUCT_NAME = "RimWorld Utilities";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A80000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = local.rimworld.utilities.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RimWorld Utilities.app/Contents/MacOS/RimWorldUtilities";
+			};
+			name = Debug;
+		};
+		A80000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = local.rimworld.utilities.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RimWorld Utilities.app/Contents/MacOS/RimWorldUtilities";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A90000000000000000000001 /* Build configuration list for PBXProject "RimWorld Utilities" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A80000000000000000000001 /* Debug */,
+				A80000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A90000000000000000000002 /* Build configuration list for PBXNativeTarget "RimWorld Utilities" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A80000000000000000000003 /* Debug */,
+				A80000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A90000000000000000000003 /* Build configuration list for PBXNativeTarget "RimWorld UtilitiesTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A80000000000000000000005 /* Debug */,
+				A80000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A70000000000000000000001 /* Project object */;
+}
