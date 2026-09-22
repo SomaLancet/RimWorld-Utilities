@@ -40,7 +40,8 @@ These instructions apply to this repository for Codex, Claude Code, and other co
 - Build the project when the change affects compile-time behavior or shared code.
 - After every fix that changes application code or resources, build a fresh `.app` bundle before reporting completion. A compile-only diagnostic is not a substitute; report the exact path to the new bundle.
 - Always build agent-generated app bundles into the single stable DerivedData directory `/Users/dieruki/Projects/RimWorld-Utilities/.build/CodexBuild`. Use `clean build` so the new bundle replaces the previous one. Never create build or DerivedData directories in `/tmp`, and never create timestamped or randomly named build directories.
-- Report the app bundle at `/Users/dieruki/Projects/RimWorld-Utilities/.build/CodexBuild/Build/Products/Debug/RimWorld Utilities.app` unless the user explicitly requests a different configuration.
+- Build agent-generated app bundles in the `Release` configuration unless the user explicitly requests a different configuration. Report the build artifact at `/Users/dieruki/Projects/RimWorld-Utilities/.build/CodexBuild/Build/Products/Release/RimWorld Utilities.app`.
+- After a successful `Release` build, replace `/Applications/RimWorld Utilities.app` with the fresh bundle so it is available in Applications. Never modify the installed app when the build fails, and report both the build artifact path and the installed path.
 - Do not perform visual verification or launch the app for verification unless the user explicitly requests it.
 - Do not create or run UI automation tests in this project. Validate changes with builds, diagnostics, and targeted unit tests only.
 - Mention clearly if validation could not be run.
