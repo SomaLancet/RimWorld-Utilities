@@ -516,7 +516,8 @@ private struct SaveCleanerPlanPanel: View {
             "Genes",
             "Gene override references",
             "Stuff",
-            "Scalar references"
+            "Scalar references",
+            "Faction relations"
         ]
 
         return order.compactMap { entity in
@@ -540,6 +541,9 @@ private struct SaveCleanerPlanPanel: View {
         if item.action == "replace", let replacement = item.replacement {
             return model.localized("Заменить на \(replacement)", "Replace with \(replacement)")
         }
+        if item.action == "add" {
+            return model.localized("Добавить", "Add")
+        }
         return model.localized("Удалить", "Remove")
     }
 
@@ -552,6 +556,7 @@ private struct SaveCleanerPlanPanel: View {
         case "Gene override references": return model.localized("Ссылки override генов", "Gene override references")
         case "Stuff": return model.localized("Материалы", "Stuff")
         case "Scalar references": return model.localized("Одиночные ссылки", "Scalar references")
+        case "Faction relations": return model.localized("Отношения фракций", "Faction relations")
         default: return entity
         }
     }

@@ -958,6 +958,51 @@ final class RimWorldAnalyzerTests: XCTestCase {
         XCTAssertTrue(cleaned.contains("<overriddenByGene>null</overriddenByGene>"))
     }
 
+    func testSaveCleanerRepairsFactionRelations() throws {
+        let dataURL = root.appendingPathComponent("Data/Core/Defs", isDirectory: true)
+        try FileManager.default.createDirectory(at: dataURL, withIntermediateDirectories: true)
+        try write(
+            "<Defs><ThingDef><defName>Human</defName></ThingDef></Defs>",
+            to: dataURL.appendingPathComponent("CoreDefs.xml")
+        )
+        try write(
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <savegame><meta /><game><factionManager><allFactions>
+              <li><name>Zero</name><relations><li><other>null</other></li></relations></li>
+              <li><name>Source</name><loadID>34</loadID><relations>
+                <li><other>Faction_0</other><kind>Hostile</kind><goodwill>-80</goodwill></li>
+                <li><other>Faction_43</other><goodwill>9</goodwill></li>
+                <li><other>null</other></li>
+              </relations></li>
+              <li><name>Player</name><loadID>43</loadID><relations><li><other>null</other></li></relations></li>
+            </allFactions></factionManager></game></savegame>
+            """,
+            to: saveURL
+        )
+
+        let service = SaveCleanerService()
+        let scan = try service.scan(saveURL: saveURL, modDirectories: [root.appendingPathComponent("Data")], configURL: nil)
+        XCTAssertEqual(scan.previewItems.filter {
+            $0.entity == "Faction relations" && $0.action == "remove"
+        }.reduce(0) { $0 + $1.count }, 3)
+        XCTAssertEqual(scan.previewItems.filter {
+            $0.entity == "Faction relations" && $0.action == "add"
+        }.count, 2)
+
+        let report = try service.clean(saveURL: saveURL, modDirectories: [root.appendingPathComponent("Data")], configURL: nil)
+        let outputURL = URL(fileURLWithPath: try XCTUnwrap(report.outputPath))
+        let document = try XMLDocument(contentsOf: outputURL)
+        let rootElement = try XCTUnwrap(document.rootElement())
+
+        XCTAssertEqual(try rootElement.nodes(forXPath: "//factionManager/allFactions/li/relations/li[other='null']").count, 0)
+        XCTAssertEqual(try rootElement.nodes(forXPath: "//factionManager/allFactions/li[not(loadID)]/relations/li[other='Faction_34' and kind='Hostile' and goodwill='-80']").count, 1)
+        XCTAssertEqual(try rootElement.nodes(forXPath: "//factionManager/allFactions/li[loadID='43']/relations/li[other='Faction_34' and goodwill='9' and not(kind)]").count, 1)
+
+        let rescan = try service.scan(saveURL: outputURL, modDirectories: [root.appendingPathComponent("Data")], configURL: nil)
+        XCTAssertFalse(rescan.previewItems.contains { $0.entity == "Faction relations" })
+    }
+
     @discardableResult
     private func addMod(
         in modsURL: URL,

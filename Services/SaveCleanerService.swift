@@ -33,6 +33,7 @@ final class SaveCleanerService: SaveCleanerServiceProtocol, Sendable {
         var counts: [String: Int] = [:]
         var removals: [XMLElement] = []
         var replacements: [(element: XMLElement, value: String)] = []
+        var insertions: [(parent: XMLElement, element: XMLElement)] = []
 
         var previewItems: [SaveCleanerPreviewItem] {
             counts.map { key, count in
@@ -66,6 +67,11 @@ final class SaveCleanerService: SaveCleanerServiceProtocol, Sendable {
             removals.append(element)
             record(entity, subject, "remove", confidence: confidence)
         }
+
+        mutating func insert(_ element: XMLElement, into parent: XMLElement, entity: String, subject: String, confidence: String = "high") {
+            insertions.append((parent, element))
+            record(entity, subject, "add", confidence: confidence)
+        }
     }
 
     func scanAsync(saveURL: URL, modDirectories: [URL], configURL: URL?) async throws -> SaveCleanerReport {
@@ -92,7 +98,7 @@ final class SaveCleanerService: SaveCleanerServiceProtocol, Sendable {
             savePath: saveURL.path,
             activeDefCount: catalog.defs.count,
             scannedModCount: catalog.scannedModCount,
-            unknownDefCount: Set(preview.map(\.subject)).count,
+            unknownDefCount: Set(preview.filter { $0.entity != "Faction relations" }.map(\.subject)).count,
             previewItems: preview,
             outputPath: nil
         )
@@ -118,7 +124,7 @@ final class SaveCleanerService: SaveCleanerServiceProtocol, Sendable {
             savePath: saveURL.path,
             activeDefCount: catalog.defs.count,
             scannedModCount: catalog.scannedModCount,
-            unknownDefCount: Set(preview.map(\.subject)).count,
+            unknownDefCount: Set(preview.filter { $0.entity != "Faction relations" }.map(\.subject)).count,
             previewItems: preview,
             outputPath: outputURL.path
         )
@@ -424,8 +430,72 @@ final class SaveCleanerService: SaveCleanerServiceProtocol, Sendable {
             removedContentNodes: removedContentNodes,
             plan: &plan
         )
+        planFactionRelationChanges(in: root, plan: &plan)
 
         return plan
+    }
+
+    private func planFactionRelationChanges(in root: XMLElement, plan: inout SaveCleanerPlan) {
+        guard let factionManager = allElements(root).first(where: { $0.name == "factionManager" }),
+              let allFactions = factionManager.directElement("allFactions") else {
+            return
+        }
+
+        var factions: [(reference: String, element: XMLElement)] = []
+        var factionsByReference: [String: XMLElement] = [:]
+        for faction in allFactions.childrenElements where faction.name == "li" {
+            let loadID = faction.directTextOptional("loadID") ?? "0"
+            let reference = "Faction_\(loadID)"
+            guard factionsByReference[reference] == nil else { continue }
+            factions.append((reference, faction))
+            factionsByReference[reference] = faction
+        }
+
+        var scheduledReverseRelations: Set<String> = []
+        for (sourceReference, sourceFaction) in factions {
+            guard let sourceRelations = sourceFaction.directElement("relations") else { continue }
+            for relation in sourceRelations.childrenElements where relation.name == "li" {
+                guard let other = relation.directTextOptional("other") else { continue }
+                if other == "null" {
+                    plan.remove(
+                        relation,
+                        entity: "Faction relations",
+                        subject: "\(factionDisplayName(sourceFaction, reference: sourceReference)) → null"
+                    )
+                    continue
+                }
+
+                guard other != sourceReference,
+                      let targetFaction = factionsByReference[other],
+                      let targetRelations = targetFaction.directElement("relations"),
+                      !targetRelations.childrenElements.contains(where: {
+                          $0.name == "li" && $0.directTextOptional("other") == sourceReference
+                      }),
+                      scheduledReverseRelations.insert("\(other)|\(sourceReference)").inserted else {
+                    continue
+                }
+
+                let reverseRelation = XMLElement(name: "li")
+                reverseRelation.addChild(XMLElement(name: "other", stringValue: sourceReference))
+                if let kind = relation.directTextOptional("kind") {
+                    reverseRelation.addChild(XMLElement(name: "kind", stringValue: kind))
+                }
+                if let goodwill = relation.directTextOptional("goodwill") {
+                    reverseRelation.addChild(XMLElement(name: "goodwill", stringValue: goodwill))
+                }
+                plan.insert(
+                    reverseRelation,
+                    into: targetRelations,
+                    entity: "Faction relations",
+                    subject: "\(factionDisplayName(targetFaction, reference: other)) → \(factionDisplayName(sourceFaction, reference: sourceReference))"
+                )
+            }
+        }
+    }
+
+    private func factionDisplayName(_ faction: XMLElement, reference: String) -> String {
+        guard let name = faction.directTextOptional("name") else { return reference }
+        return "\(name) (\(reference))"
     }
 
     private func planDanglingReferenceChanges(
@@ -488,6 +558,10 @@ final class SaveCleanerService: SaveCleanerServiceProtocol, Sendable {
 
         for replacement in plan.replacements {
             replacement.element.setStringValue(replacement.value, resolvingEntities: false)
+        }
+
+        for insertion in plan.insertions {
+            insertion.parent.addChild(insertion.element)
         }
     }
 
