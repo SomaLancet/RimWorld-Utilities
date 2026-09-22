@@ -58,6 +58,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         var paths: [String] = []
         var defs: Set<String> = []
         var defsByKind: [String: Set<String>] = [:]
+        var ambiguousThingDefs: Set<String> = []
         var defSources: [String: DefSource] = [:]
         var foreignReferences: Set<String> = []
         var classNames: Set<String> = []
@@ -201,7 +202,9 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         let protectedScans = try protectedModURLs.map { try scanMod(at: $0) }
         let protectedScan = combinedScan(from: protectedScans)
         let mod = removingProtectedSymbols(from: combinedScan(from: scans), protectedScan: protectedScan)
-        guard !mod.defs.isEmpty || !mod.classNames.isEmpty || mod.packageId != nil else { throw ModRemovalError.invalidModFolder }
+        guard !mod.defs.isEmpty || !mod.ambiguousThingDefs.isEmpty || !mod.classNames.isEmpty || mod.packageId != nil else {
+            throw ModRemovalError.invalidModFolder
+        }
         let references = try SaveReferenceReader.read(saveURL)
         let matched = mod.defs.filter { references.defs[$0] != nil }
         Self.logger.notice("Scanning save: \(saveURL.path, privacy: .public)")
@@ -235,7 +238,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             packageIds: Array(mod.packageIds).sorted(),
             modName: mod.name,
             modNames: Array(mod.names).sorted(),
-            defCount: mod.defs.count,
+            defCount: mod.defs.count + mod.ambiguousThingDefs.count,
             matchedDefCount: matched.count,
             foreignReferenceCount: mod.foreignReferences.count,
             planItems: plan,
@@ -289,7 +292,9 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             increment("Pawn work priorities", by: $0)
         }
 
-        pruneParallelDictionaries(in: root, badKeys: mod.defs.union(factionIds)) { increment("Dictionary entries", by: $0) }
+        pruneParallelDictionaries(in: root, badKeys: mod.defs.union(factionIds), thingDefKeys: mod.ambiguousThingDefs) {
+            increment("Dictionary entries", by: $0)
+        }
 
         for element in allElements(root) where element.name == "li" && mod.factionDefs.contains(element.directText("def")) {
             if detachPreservingParallelDictionary(element) {
@@ -326,6 +331,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         removedObjectIDs.formUnion(scrubPawns(in: root, mod: mod) { key in increment(key) })
         removedObjectIDs.formUnion(clearRemovedCurrentJobs(in: root, mod: mod) { key in increment(key) })
         removedObjectIDs.formUnion(pruneOwnedClassNodes(in: root, mod: mod) { key in increment(key) })
+        removedObjectIDs.formUnion(staleOwnedPawnReferences(in: root, mod: mod))
 
         let removableDefs = mod.defs.subtracting(mod.factionDefs)
         var removedContentNodes = Set<ObjectIdentifier>()
@@ -364,7 +370,8 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             } else if name == "kindDef", mod.pawnKindDefs.contains(value) {
                 element.setStringValue("Colonist", resolvingEntities: false)
                 increment("Pawn kind refs replaced")
-            } else if ["peq", "thingDef", "source"].contains(name), mod.defs.contains(value) {
+            } else if ["peq", "source"].contains(name) && mod.defs.contains(value)
+                        || name == "thingDef" && mod.itemDefs.contains(value) {
                 element.setStringValue("null", resolvingEntities: false)
                 increment("Scalar refs nulled")
             }
@@ -475,20 +482,25 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
     private func removingProtectedSymbols(from scan: ModScan, protectedScan: ModScan) -> ModScan {
         guard !protectedScan.defs.isEmpty || !protectedScan.classNames.isEmpty else { return scan }
         var result = scan
-        let protectedDefinitions = result.defs.intersection(protectedScan.defs)
+        var protectedDefinitions = Set<String>()
+        for (kind, definitions) in result.defsByKind {
+            let shared = definitions.intersection(protectedScan.defsByKind[kind] ?? [])
+            protectedDefinitions.formUnion(shared)
+            result.defsByKind[kind] = definitions.subtracting(shared)
+        }
         if !protectedDefinitions.isEmpty {
             Self.logger.notice("Definitions removed by protection: \(protectedDefinitions.sorted().joined(separator: ", "), privacy: .public)")
         }
-        result.defs.subtract(protectedScan.defs)
+        result.defs = result.defsByKind.values.reduce(into: Set<String>()) { $0.formUnion($1) }
+        let ambiguous = result.defs.intersection(protectedScan.defs)
+        result.ambiguousThingDefs = ambiguous.intersection(result.itemDefs)
+        result.defs.subtract(ambiguous)
         result.foreignReferences.subtract(protectedScan.defs)
         result.classNames.subtract(protectedScan.classNames)
-        for key in result.defsByKind.keys {
-            result.defsByKind[key]?.subtract(protectedScan.defs)
-        }
-        for def in protectedScan.defs {
+        for def in protectedDefinitions where !result.defs.contains(def) {
             result.defSources.removeValue(forKey: def)
         }
-        result.workTypeSources.removeAll { protectedScan.defs.contains($0.defName) }
+        result.workTypeSources.removeAll { (protectedScan.defsByKind["WorkTypeDef"] ?? []).contains($0.defName) }
         return result
     }
 
@@ -586,7 +598,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             )
         }
 
-        previewParallelDictionaries(in: elements, badKeys: mod.defs.union(factionIds)) { subject, count in
+        previewParallelDictionaries(in: elements, badKeys: mod.defs.union(factionIds), thingDefKeys: mod.ambiguousThingDefs) { subject, count in
             record("Dictionary entries", subject, "remove", by: count)
         }
 
@@ -677,7 +689,8 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             } else if name == "kindDef", mod.pawnKindDefs.contains(value) {
                 guard !isInsideAffectedNonHumanPawn(element, mod: mod) else { continue }
                 record("Pawn kinds", value, "replace", replacement: "Colonist")
-            } else if ["peq", "thingDef", "source"].contains(name), mod.defs.contains(value) {
+            } else if ["peq", "source"].contains(name) && mod.defs.contains(value)
+                        || name == "thingDef" && mod.itemDefs.contains(value) {
                 record("Scalar references", "\(name): \(value)", "replace", replacement: "null")
             }
         }
@@ -736,14 +749,20 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         }
     }
 
-    private func previewParallelDictionaries(in elements: [XMLElement], badKeys: Set<String>, record: (String, Int) -> Void) {
+    private func previewParallelDictionaries(
+        in elements: [XMLElement],
+        badKeys: Set<String>,
+        thingDefKeys: Set<String>,
+        record: (String, Int) -> Void
+    ) {
         for container in elements {
             guard let keys = container.directElement("keys"), let values = container.directElement("values") else { continue }
             let keyItems = keys.childrenElements
             let valueItems = values.childrenElements
             guard keyItems.count == valueItems.count else { continue }
             for item in keyItems {
-                guard let key = item.trimmedText, badKeys.contains(key) else { continue }
+                guard let key = item.trimmedText,
+                      badKeys.contains(key) || isThingDefDictionary(container) && thingDefKeys.contains(key) else { continue }
                 record(key, 1)
             }
         }
@@ -892,6 +911,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             ["Corpse_\(defName)", "Meat_\(defName)", "Leather_\(defName)"]
         }
         result.defs.formUnion(generatedRaceDefs)
+        result.defsByKind["ThingDef", default: []].formUnion(generatedRaceDefs)
 
         for assembly in managedAssemblies(under: url) {
             guard let data = try? Data(contentsOf: assembly) else { continue }
@@ -1104,7 +1124,12 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         if removed > 0 { record(removed) }
     }
 
-    private func pruneParallelDictionaries(in root: XMLElement, badKeys: Set<String>, record: (Int) -> Void) {
+    private func pruneParallelDictionaries(
+        in root: XMLElement,
+        badKeys: Set<String>,
+        thingDefKeys: Set<String>,
+        record: (Int) -> Void
+    ) {
         for container in allElements(root) {
             guard let keys = container.directElement("keys"), let values = container.directElement("values") else { continue }
             let keyItems = keys.childrenElements
@@ -1112,13 +1137,18 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             guard keyItems.count == valueItems.count else { continue }
             var removed = 0
             for index in stride(from: keyItems.count - 1, through: 0, by: -1) {
-                guard let key = keyItems[index].trimmedText, badKeys.contains(key) else { continue }
+                guard let key = keyItems[index].trimmedText,
+                      badKeys.contains(key) || isThingDefDictionary(container) && thingDefKeys.contains(key) else { continue }
                 keyItems[index].detach()
                 valueItems[index].detach()
                 removed += 1
             }
             if removed > 0 { record(removed) }
         }
+    }
+
+    private func isThingDefDictionary(_ container: XMLElement) -> Bool {
+        ["priceModifiers", "priceHistoryRecorders"].contains(container.name ?? "")
     }
 
     private func parallelDictionaryMismatchCount(in elements: [XMLElement]) -> Int {
@@ -1383,6 +1413,24 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         return result
     }
 
+    private func staleOwnedPawnReferences(in root: XMLElement, mod: ModScan) -> Set<String> {
+        let presentIDs = Set(allElements(root).compactMap { $0.directTextOptional("id") })
+        let pawnDefs = (mod.defsByKind["ThingDef"] ?? []).sorted { $0.count > $1.count }
+        return Set(allElements(root).compactMap { element -> String? in
+            guard element.name == "pawn",
+                  let reference = element.trimmedText,
+                  reference.hasPrefix("Thing_") else { return nil }
+            let id = String(reference.dropFirst("Thing_".count))
+            guard !presentIDs.contains(id),
+                  pawnDefs.contains(where: { def in
+                      guard id.hasPrefix(def) else { return false }
+                      let suffix = id.dropFirst(def.count)
+                      return !suffix.isEmpty && suffix.allSatisfy(\.isNumber)
+                  }) else { return nil }
+            return reference
+        })
+    }
+
     private func pruneReferences(to removedObjectIDs: Set<String>, in root: XMLElement, record: (Int) -> Void) {
         guard !removedObjectIDs.isEmpty else { return }
         var removed = 0
@@ -1396,7 +1444,9 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
                       guard !removedID.allSatisfy({ $0.isNumber }) else { return false }
                       return value == removedID
                   }) else { continue }
-            if name == "li" {
+            if name == "pawn", let entry = element.parent as? XMLElement, entry.name == "li" {
+                guard detachPreservingParallelDictionary(entry) else { continue }
+            } else if name == "li" {
                 guard detachPreservingParallelDictionary(element) else { continue }
             } else {
                 element.setStringValue("null", resolvingEntities: false)
@@ -1484,6 +1534,8 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
     private func shouldRemoveContentNode(_ element: XMLElement, mod: ModScan, removableDefs: Set<String>) -> Bool {
         let def = element.directText("def")
         if !def.isEmpty, removableDefs.contains(def) { return true }
+        if !def.isEmpty, mod.ambiguousThingDefs.contains(def),
+           element.name == "thing" || element.directElement("id") != nil { return true }
         let thingDef = element.directText("thingDef")
         if !thingDef.isEmpty, mod.itemDefs.contains(thingDef) { return true }
         return false

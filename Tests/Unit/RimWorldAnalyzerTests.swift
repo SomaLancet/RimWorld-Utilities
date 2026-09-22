@@ -475,6 +475,59 @@ final class RimWorldAnalyzerTests: XCTestCase {
         XCTAssertTrue(cleaned.contains("SharedThing"))
     }
 
+    func testModRemovalKeepsProtectedHediffWhenThingDefSharesItsName() throws {
+        let modsURL = root.appendingPathComponent("Mods", isDirectory: true)
+        let removedMod = try addMod(in: modsURL, folder: "Removed", packageId: "example.removed", name: "Removed Mod")
+        let protectedMod = try addMod(in: modsURL, folder: "Protected", packageId: "example.protected", name: "Protected Mod")
+        let removedDefs = removedMod.appendingPathComponent("Defs", isDirectory: true)
+        let protectedDefs = protectedMod.appendingPathComponent("Defs", isDirectory: true)
+        try FileManager.default.createDirectory(at: removedDefs, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: protectedDefs, withIntermediateDirectories: true)
+        try write("<Defs><ThingDef><defName>FleshmassLung</defName></ThingDef></Defs>", to: removedDefs.appendingPathComponent("Defs.xml"))
+        try write("<Defs><HediffDef><defName>FleshmassLung</defName></HediffDef></Defs>", to: protectedDefs.appendingPathComponent("Defs.xml"))
+        try write(
+            """
+            <savegame><meta /><game>
+              <priceModifiers><keys><li>FleshmassLung</li><li>Steel</li></keys><values><li>2</li><li>3</li></values></priceModifiers>
+              <priceHistoryRecorders><keys><li>FleshmassLung</li><li>Steel</li></keys><values><li>old</li><li>kept</li></values></priceHistoryRecorders>
+              <health><hediffs><li Class="Hediff_AddedPart"><loadID>8</loadID><def>FleshmassLung</def></li></hediffs></health>
+              <things><thing><def>FleshmassLung</def><id>FleshmassLung17</id></thing></things>
+            </game></savegame>
+            """,
+            to: saveURL
+        )
+
+        let report = try ModRemovalService().clean(saveURL: saveURL, modURLs: [removedMod], protectedModURLs: [protectedMod])
+        let document = try XMLDocument(contentsOf: URL(fileURLWithPath: try XCTUnwrap(report.outputPath)))
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/priceModifiers/keys/li").compactMap(\.stringValue), ["Steel"])
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/priceModifiers/values/li").compactMap(\.stringValue), ["3"])
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/priceHistoryRecorders/keys/li").compactMap(\.stringValue), ["Steel"])
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/health/hediffs/li/def").first?.stringValue, "FleshmassLung")
+        XCTAssertTrue(try document.nodes(forXPath: "/savegame/game/things/thing").isEmpty)
+    }
+
+    func testModRemovalRemovesStalePawnDietEntryForSelectedRace() throws {
+        let modsURL = root.appendingPathComponent("Mods", isDirectory: true)
+        let removedMod = try addMod(in: modsURL, folder: "Removed", packageId: "example.removed", name: "Removed Mod")
+        let defsURL = removedMod.appendingPathComponent("Defs", isDirectory: true)
+        try FileManager.default.createDirectory(at: defsURL, withIntermediateDirectories: true)
+        try write("<Defs><ThingDef><defName>FH_Whipspike</defName><race /></ThingDef></Defs>", to: defsURL.appendingPathComponent("Defs.xml"))
+        try write(
+            """
+            <savegame><meta /><game>
+              <pawns><li Class="Pawn"><def>Human</def><id>Human1</id><kindDef>Colonist</kindDef></li></pawns>
+              <diets><li><pawn>Thing_FH_Whipspike8480079</pawn><favourites><li>MealSurvivalPack</li></favourites></li>
+                <li><pawn>Thing_Human1</pawn><favourites><li>MealSimple</li></favourites></li></diets>
+            </game></savegame>
+            """,
+            to: saveURL
+        )
+
+        let report = try ModRemovalService().clean(saveURL: saveURL, modURL: removedMod)
+        let document = try XMLDocument(contentsOf: URL(fileURLWithPath: try XCTUnwrap(report.outputPath)))
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/diets/li/pawn").compactMap(\.stringValue), ["Thing_Human1"])
+    }
+
     func testModRemovalAlwaysProtectsOfficialDefsWithoutConfig() throws {
         let modsURL = root.appendingPathComponent("Mods", isDirectory: true)
         let selectedMod = try addMod(in: modsURL, folder: "Selected", packageId: "example.selected", name: "Selected Mod")
