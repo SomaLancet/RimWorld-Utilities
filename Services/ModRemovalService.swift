@@ -328,6 +328,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         }
 
         var removedObjectIDs = normalizeOrRemoveAffectedPawns(in: root, mod: mod) { key in increment(key) }
+        clearRemovedMutantTrackers(in: root, mod: mod) { key in increment(key) }
         removedObjectIDs.formUnion(scrubPawns(in: root, mod: mod) { key in increment(key) })
         removedObjectIDs.formUnion(clearRemovedCurrentJobs(in: root, mod: mod) { key in increment(key) })
         removedObjectIDs.formUnion(pruneOwnedClassNodes(in: root, mod: mod) { key in increment(key) })
@@ -628,6 +629,13 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
 
         previewPawnChanges(in: elements, mod: mod, record: record)
 
+        for pawn in elements {
+            guard let shambler = pawn.directElement("shambler"),
+                  let mutantType = shambler.directElement("shamblerType")?.trimmedText,
+                  mod.defs.contains(mutantType) else { continue }
+            record("Pawn mutant state", mutantType, "clear", replacement: "ordinary pawn")
+        }
+
         for jobs in elements {
             guard let subject = removedCurrentJobSubject(in: jobs, mod: mod) else { continue }
             record("Pawn current jobs", subject, "clear")
@@ -697,7 +705,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
 
 
         let specificallyHandledFields: Set<String> = [
-            "li", "xenotype", "originalXenotypeDef", "stuff", "kindDef", "peq", "thingDef", "source"
+            "li", "xenotype", "originalXenotypeDef", "stuff", "kindDef", "peq", "thingDef", "source", "shamblerType"
         ]
         for element in elements where element.childrenElements.isEmpty {
             guard let name = element.name,
@@ -1207,6 +1215,17 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             }
         }
         return removedObjectIDs
+    }
+
+    private func clearRemovedMutantTrackers(in root: XMLElement, mod: ModScan, record: (String) -> Void) {
+        for pawn in allElements(root) {
+            guard let shambler = pawn.directElement("shambler"),
+                  let mutantType = shambler.directElement("shamblerType")?.trimmedText,
+                  mod.defs.contains(mutantType) else { continue }
+            shambler.setChildren([])
+            shambler.setAttributesWith(["IsNull": "True"])
+            record("Pawn mutant states cleared")
+        }
     }
 
     private func normalizeOrRemoveAffectedPawns(

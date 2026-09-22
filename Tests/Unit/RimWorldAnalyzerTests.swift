@@ -528,6 +528,37 @@ final class RimWorldAnalyzerTests: XCTestCase {
         XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/diets/li/pawn").compactMap(\.stringValue), ["Thing_Human1"])
     }
 
+    func testModRemovalRestoresPawnWithRemovedMutantType() throws {
+        let modsURL = root.appendingPathComponent("Mods", isDirectory: true)
+        let removedMod = try addMod(in: modsURL, folder: "Removed", packageId: "example.removed", name: "Removed Mod")
+        let defsURL = removedMod.appendingPathComponent("Defs", isDirectory: true)
+        try FileManager.default.createDirectory(at: defsURL, withIntermediateDirectories: true)
+        try write("<Defs><Custom.MutantDef><defName>ModMutant</defName></Custom.MutantDef></Defs>", to: defsURL.appendingPathComponent("Mutants.xml"))
+        try write(
+            """
+            <savegame><meta /><game><pawns>
+              <li Class="Pawn"><def>Human</def><id>Human1</id><kindDef>Colonist</kindDef>
+                <shambler><shamblerType>ModMutant</shamblerType><hasTurned>True</hasTurned>
+                  <mutantHediff>Hediff_99</mutantHediff><verbTracker><verbs /></verbTracker></shambler>
+                <genes><endogenes><li><def>Robust</def><pawn>Thing_Human1</pawn><loadID>7</loadID></li></endogenes></genes>
+              </li>
+              <li Class="Pawn"><def>Human</def><id>Human2</id><kindDef>Colonist</kindDef>
+                <shambler><shamblerType>Shambler</shamblerType><hasTurned>True</hasTurned></shambler>
+              </li>
+            </pawns></game></savegame>
+            """,
+            to: saveURL
+        )
+
+        let report = try ModRemovalService().clean(saveURL: saveURL, modURL: removedMod)
+        let document = try XMLDocument(contentsOf: URL(fileURLWithPath: try XCTUnwrap(report.outputPath)))
+        XCTAssertEqual(try document.nodes(forXPath: "//li[id='Human1']/shambler/@IsNull").first?.stringValue, "True")
+        XCTAssertTrue(try document.nodes(forXPath: "//li[id='Human1']/shambler/*").isEmpty)
+        XCTAssertEqual(try document.nodes(forXPath: "//li[id='Human1']/genes/endogenes/li/def").first?.stringValue, "Robust")
+        XCTAssertEqual(try document.nodes(forXPath: "//li[id='Human2']/shambler/shamblerType").first?.stringValue, "Shambler")
+        XCTAssertTrue(report.planItems.contains { $0.subject == "Pawn mutant states cleared" && $0.count == 1 })
+    }
+
     func testModRemovalAlwaysProtectsOfficialDefsWithoutConfig() throws {
         let modsURL = root.appendingPathComponent("Mods", isDirectory: true)
         let selectedMod = try addMod(in: modsURL, folder: "Selected", packageId: "example.selected", name: "Selected Mod")
