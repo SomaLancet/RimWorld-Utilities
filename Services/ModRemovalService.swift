@@ -272,6 +272,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         let initialDictionaryMismatches = parallelDictionaryMismatchCount(in: initialElements)
         let initialDuplicateIDs = duplicateObjectIDs(in: initialElements)
         let initialInvalidBodyPartReferences = invalidBodyPartReferenceCount(in: initialElements)
+        let initialPawnIntegrityIssues = pawnIntegrityIssueCount(in: initialElements)
 
         let factionIds = factionLoadIds(in: initialElements, factionDefs: mod.factionDefs)
 
@@ -322,7 +323,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         }
 
         var removedObjectIDs = removeAffectedAnimalPawns(in: root, mod: mod) { key in increment(key) }
-        scrubPawns(in: root, mod: mod) { key in increment(key) }
+        removedObjectIDs.formUnion(scrubPawns(in: root, mod: mod) { key in increment(key) })
         removedObjectIDs.formUnion(clearRemovedCurrentJobs(in: root, mod: mod) { key in increment(key) })
         removedObjectIDs.formUnion(pruneOwnedClassNodes(in: root, mod: mod) { key in increment(key) })
 
@@ -391,9 +392,21 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         guard invalidBodyPartReferenceCount(in: finalElements) <= initialInvalidBodyPartReferences else {
             throw ModRemovalError.validationFailed("повреждены ссылки part/body/index на части тела")
         }
+        guard pawnIntegrityIssueCount(in: finalElements) <= initialPawnIntegrityIssues else {
+            throw ModRemovalError.validationFailed("повреждены обязательные данные пешек или генов")
+        }
         let remainingDuplicateIDs = duplicateObjectIDs(in: finalElements)
         guard remainingDuplicateIDs.count <= initialDuplicateIDs.count else {
             throw ModRemovalError.validationFailed("появились новые повторяющиеся ID")
+        }
+        let remainingRemovedObjectReferences = removedObjectReferenceCount(
+            in: finalElements,
+            removedObjectIDs: removedObjectIDs
+        )
+        guard remainingRemovedObjectReferences == 0 else {
+            throw ModRemovalError.validationFailed(
+                "остались ссылки на удалённые объекты: \(remainingRemovedObjectReferences)"
+            )
         }
         if !remainingDuplicateIDs.isEmpty {
             increment("Pre-existing duplicate IDs requiring review", by: remainingDuplicateIDs.count)
@@ -866,6 +879,11 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             }
         }
 
+        let generatedRaceDefs = (result.defsByKind["ThingDef"] ?? []).flatMap { defName in
+            ["Corpse_\(defName)", "Meat_\(defName)", "Leather_\(defName)"]
+        }
+        result.defs.formUnion(generatedRaceDefs)
+
         for assembly in managedAssemblies(under: url) {
             guard let data = try? Data(contentsOf: assembly) else { continue }
             result.classNames.formUnion(ManagedAssemblyTypeReader.typeNames(in: data))
@@ -1112,7 +1130,8 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         return duplicates
     }
 
-    private func scrubPawns(in root: XMLElement, mod: ModScan, record: (String) -> Void) {
+    private func scrubPawns(in root: XMLElement, mod: ModScan, record: (String) -> Void) -> Set<String> {
+        var removedObjectIDs = Set<String>()
         for pawn in allElements(root) where pawn.directText("def") == "Human" {
             if let kind = pawn.directElement("kindDef"), let value = kind.trimmedText, mod.pawnKindDefs.contains(value) {
                 kind.setStringValue("Colonist", resolvingEntities: false)
@@ -1126,7 +1145,11 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
                 for gene in geneList.childrenElements where mod.geneDefs.contains(gene.directText("def")) {
                     let loadID = gene.directText("loadID")
                     if detachPreservingParallelDictionary(gene) {
-                        if !loadID.isEmpty { removedGeneIds.insert("Gene_\(loadID)") }
+                        if !loadID.isEmpty {
+                            let reference = loadID.hasPrefix("Gene_") ? loadID : "Gene_\(loadID)"
+                            removedGeneIds.insert(reference)
+                            removedObjectIDs.insert(reference)
+                        }
                         record("Pawn genes removed")
                     }
                 }
@@ -1144,6 +1167,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
                 record("Pawn xenotypes replaced")
             }
         }
+        return removedObjectIDs
     }
 
     private func removeAffectedAnimalPawns(
@@ -1343,6 +1367,26 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         if removed > 0 { record(removed) }
     }
 
+    private func removedObjectReferenceCount(
+        in elements: [XMLElement],
+        removedObjectIDs: Set<String>
+    ) -> Int {
+        guard !removedObjectIDs.isEmpty else { return 0 }
+        return elements.reduce(into: 0) { count, element in
+            guard element.childrenElements.isEmpty,
+                  let name = element.name,
+                  !["id", "loadID", "index"].contains(name),
+                  let value = element.trimmedText,
+                  value != "null",
+                  removedObjectIDs.contains(where: { removedID in
+                      if value.hasSuffix("_\(removedID)") { return true }
+                      guard !removedID.allSatisfy({ $0.isNumber }) else { return false }
+                      return value == removedID
+                  }) else { return }
+            count += 1
+        }
+    }
+
     private func invalidBodyPartReferenceCount(in elements: [XMLElement]) -> Int {
         elements.reduce(into: 0) { count, element in
             guard element.name == "part",
@@ -1350,6 +1394,51 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
                   let index = element.directTextOptional("index"),
                   body == "null" || index == "null" else { return }
             count += 1
+        }
+    }
+
+    private func pawnIntegrityIssueCount(in elements: [XMLElement]) -> Int {
+        elements.reduce(into: 0) { count, pawn in
+            guard pawn.directElement("def") != nil,
+                  pawn.directElement("kindDef") != nil,
+                  pawn.directElement("id") != nil else { return }
+
+            for field in ["def", "kindDef", "id"] {
+                let value = pawn.directText(field)
+                if value.isEmpty || value == "null" { count += 1 }
+            }
+
+            if pawn.directText("def") == "Human" {
+                guard let name = pawn.directElement("name"),
+                      name.attribute(forName: "IsNull")?.stringValue != "True" else {
+                    count += 1
+                    return
+                }
+                if name.childrenElements.isEmpty, name.trimmedText?.isEmpty != false {
+                    count += 1
+                }
+
+                guard let story = pawn.directElement("story") else {
+                    count += 1
+                    return
+                }
+                for field in ["bodyType", "headType", "hairDef"] {
+                    let value = story.directText(field)
+                    if value.isEmpty || value == "null" { count += 1 }
+                }
+            }
+
+            guard let genes = pawn.directElement("genes") else { return }
+            for listName in ["endogenes", "xenogenes"] {
+                guard let list = genes.directElement(listName) else { continue }
+                for gene in list.childrenElements {
+                    let def = gene.directText("def")
+                    let loadID = gene.directText("loadID")
+                    if def.isEmpty || def == "null" || loadID.isEmpty || loadID == "null" {
+                        count += 1
+                    }
+                }
+            }
         }
     }
 

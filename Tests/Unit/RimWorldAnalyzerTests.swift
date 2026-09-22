@@ -748,6 +748,102 @@ final class RimWorldAnalyzerTests: XCTestCase {
         XCTAssertTrue(cleaned.contains("<selectedPawn>null</selectedPawn>"))
     }
 
+    func testModRemovalCleansGeneratedRaceDefsAndTheirDictionaryValues() throws {
+        let modsURL = root.appendingPathComponent("Mods", isDirectory: true)
+        let removedMod = try addMod(in: modsURL, folder: "Removed", packageId: "example.removed", name: "Removed Mod")
+        let defsURL = removedMod.appendingPathComponent("Defs", isDirectory: true)
+        try FileManager.default.createDirectory(at: defsURL, withIntermediateDirectories: true)
+        try write(
+            "<Defs><ThingDef><defName>RemovedRace</defName><race /></ThingDef></Defs>",
+            to: defsURL.appendingPathComponent("Defs.xml")
+        )
+        try write(
+            """
+            <savegame><meta /><game>
+              <lookup>
+                <keys><li>Corpse_RemovedRace</li><li>Steel</li></keys>
+                <values><li>removed value</li><li>kept value</li></values>
+              </lookup>
+              <things>
+                <thing><def>Corpse_RemovedRace</def><id>Corpse1</id></thing>
+                <thing><def>Steel</def><id>Steel1</id></thing>
+              </things>
+            </game></savegame>
+            """,
+            to: saveURL
+        )
+
+        let report = try ModRemovalService().clean(saveURL: saveURL, modURL: removedMod)
+        let cleanedURL = URL(fileURLWithPath: try XCTUnwrap(report.outputPath))
+        let document = try XMLDocument(contentsOf: cleanedURL, options: [])
+
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/lookup/keys/li").compactMap(\.stringValue), ["Steel"])
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/lookup/values/li").compactMap(\.stringValue), ["kept value"])
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/things/thing/def").compactMap(\.stringValue), ["Steel"])
+    }
+
+    func testModRemovalCleansReferencesToRemovedGenes() throws {
+        let modsURL = root.appendingPathComponent("Mods", isDirectory: true)
+        let removedMod = try addMod(in: modsURL, folder: "Removed", packageId: "example.removed", name: "Removed Mod")
+        let defsURL = removedMod.appendingPathComponent("Defs", isDirectory: true)
+        try FileManager.default.createDirectory(at: defsURL, withIntermediateDirectories: true)
+        try write(
+            "<Defs><GeneDef><defName>RemovedGene</defName></GeneDef></Defs>",
+            to: defsURL.appendingPathComponent("Defs.xml")
+        )
+        try write(
+            """
+            <savegame><meta /><game>
+              <pawns><li Class="Pawn"><def>Human</def><id>Human1</id><kindDef>Colonist</kindDef><genes>
+                <endogenes><li><def>RemovedGene</def><loadID>7</loadID></li></endogenes>
+                <xenogenes />
+              </genes></li></pawns>
+              <tracker><selectedGene>Gene_7</selectedGene><genes><li>Gene_7</li><li>Gene_8</li></genes></tracker>
+            </game></savegame>
+            """,
+            to: saveURL
+        )
+
+        let report = try ModRemovalService().clean(saveURL: saveURL, modURL: removedMod)
+        let cleaned = try String(contentsOf: URL(fileURLWithPath: try XCTUnwrap(report.outputPath)))
+
+        XCTAssertFalse(cleaned.contains("RemovedGene"))
+        XCTAssertFalse(cleaned.contains("<li>Gene_7</li>"))
+        XCTAssertTrue(cleaned.contains("<selectedGene>null</selectedGene>"))
+        XCTAssertTrue(cleaned.contains("<li>Gene_8</li>"))
+    }
+
+    func testModRemovalRejectsNewPawnIntegrityDamage() throws {
+        let modsURL = root.appendingPathComponent("Mods", isDirectory: true)
+        let removedMod = try addMod(in: modsURL, folder: "Removed", packageId: "example.removed", name: "Removed Mod")
+        let defsURL = removedMod.appendingPathComponent("Defs", isDirectory: true)
+        try FileManager.default.createDirectory(at: defsURL, withIntermediateDirectories: true)
+        try write(
+            "<Defs><HairDef><defName>RemovedHair</defName></HairDef></Defs>",
+            to: defsURL.appendingPathComponent("Defs.xml")
+        )
+        try write(
+            """
+            <savegame><meta /><game><pawns><li Class="Pawn">
+              <def>Human</def><id>Human1</id><kindDef>Colonist</kindDef>
+              <name><first>Ada</first><nick>Ada</nick><last>Lovelace</last></name>
+              <story><bodyType>Female</bodyType><headType>Female_AverageNormal</headType><hairDef>RemovedHair</hairDef></story>
+            </li></pawns></game></savegame>
+            """,
+            to: saveURL
+        )
+
+        XCTAssertThrowsError(try ModRemovalService().clean(saveURL: saveURL, modURL: removedMod)) { error in
+            guard let modRemovalError = error as? ModRemovalError,
+                  case let .validationFailed(detail) = modRemovalError else {
+                return XCTFail("Expected validation failure, got \(error)")
+            }
+            XCTAssertTrue(detail.contains("данные пешек"))
+        }
+        let cleanedURL = root.appendingPathComponent("Colony [cleaned].rws")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: cleanedURL.path))
+    }
+
     func testModRemovalUsesAssemblyOwnershipForUniversalCleanup() throws {
         let modsURL = root.appendingPathComponent("Mods", isDirectory: true)
         let removedMod = try addMod(in: modsURL, folder: "Removed", packageId: "example.removed", name: "Removed Mod")
