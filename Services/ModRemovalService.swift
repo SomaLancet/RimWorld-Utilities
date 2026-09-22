@@ -322,7 +322,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             }
         }
 
-        var removedObjectIDs = removeAffectedAnimalPawns(in: root, mod: mod) { key in increment(key) }
+        var removedObjectIDs = normalizeOrRemoveAffectedPawns(in: root, mod: mod) { key in increment(key) }
         removedObjectIDs.formUnion(scrubPawns(in: root, mod: mod) { key in increment(key) })
         removedObjectIDs.formUnion(clearRemovedCurrentJobs(in: root, mod: mod) { key in increment(key) })
         removedObjectIDs.formUnion(pruneOwnedClassNodes(in: root, mod: mod) { key in increment(key) })
@@ -621,10 +621,19 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             record("Pawn current jobs", subject, "clear")
         }
 
-        for pawn in elements where isAffectedAnimalPawn(pawn, mod: mod) {
+        for pawn in elements where isAffectedNonHumanPawn(pawn, mod: mod) {
             let kind = pawn.directText("kindDef")
             let def = pawn.directText("def")
-            record("Things and items", kind.isEmpty ? def : kind, "remove")
+            if shouldNormalizeAsHuman(pawn) {
+                record(
+                    "Pawns",
+                    kind.isEmpty ? def : kind,
+                    "replace",
+                    replacement: "Human / Colonist"
+                )
+            } else {
+                record("Things and items", kind.isEmpty ? def : kind, "remove")
+            }
         }
 
         for element in elements {
@@ -666,7 +675,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             } else if name == "stuff", mod.defs.contains(value) {
                 record("Stuff", value, "replace", replacement: "Cloth")
             } else if name == "kindDef", mod.pawnKindDefs.contains(value) {
-                guard !isInsideAffectedAnimalPawn(element, mod: mod) else { continue }
+                guard !isInsideAffectedNonHumanPawn(element, mod: mod) else { continue }
                 record("Pawn kinds", value, "replace", replacement: "Colonist")
             } else if ["peq", "thingDef", "source"].contains(name), mod.defs.contains(value) {
                 record("Scalar references", "\(name): \(value)", "replace", replacement: "null")
@@ -1170,13 +1179,18 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         return removedObjectIDs
     }
 
-    private func removeAffectedAnimalPawns(
+    private func normalizeOrRemoveAffectedPawns(
         in root: XMLElement,
         mod: ModScan,
         record: (String) -> Void
     ) -> Set<String> {
         var removedObjectIDs = Set<String>()
-        for pawn in allElements(root) where isAffectedAnimalPawn(pawn, mod: mod) {
+        for pawn in allElements(root) where isAffectedNonHumanPawn(pawn, mod: mod) {
+            if shouldNormalizeAsHuman(pawn) {
+                normalizeAsHuman(pawn, mod: mod)
+                record("Humanlike pawns normalized")
+                continue
+            }
             if detachPreservingParallelDictionary(pawn) {
                 removedObjectIDs.formUnion(objectIDs(in: pawn))
                 record("Animal pawns removed")
@@ -1185,7 +1199,7 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
         return removedObjectIDs
     }
 
-    private func isAffectedAnimalPawn(_ element: XMLElement, mod: ModScan) -> Bool {
+    private func isAffectedNonHumanPawn(_ element: XMLElement, mod: ModScan) -> Bool {
         guard element.directText("def") != "Human",
               element.directElement("def") != nil,
               element.directElement("kindDef") != nil,
@@ -1198,11 +1212,36 @@ final class ModRemovalService: ModRemovalServiceProtocol, Sendable {
             || mod.pawnKindDefs.contains(element.directText("kindDef"))
     }
 
-    private func isInsideAffectedAnimalPawn(_ element: XMLElement, mod: ModScan) -> Bool {
+    private func shouldNormalizeAsHuman(_ pawn: XMLElement) -> Bool {
+        guard let story = pawn.directElement("story") else { return false }
+        return story.attribute(forName: "IsNull")?.stringValue != "True"
+    }
+
+    private func normalizeAsHuman(_ pawn: XMLElement, mod: ModScan) {
+        pawn.directElement("def")?.setStringValue("Human", resolvingEntities: false)
+        pawn.directElement("kindDef")?.setStringValue("Colonist", resolvingEntities: false)
+        pawn.attribute(forName: "Class")?.stringValue = "Pawn"
+
+        guard let story = pawn.directElement("story") else { return }
+        let isFemale = pawn.directText("gender") == "Female"
+        let replacements = [
+            "bodyType": isFemale ? "Female" : "Male",
+            "headType": isFemale ? "Female_AverageNormal" : "Male_AverageNormal",
+            "hairDef": "Shaved"
+        ]
+        for (field, replacement) in replacements {
+            guard let element = story.directElement(field),
+                  let value = element.trimmedText,
+                  value == "null" || value.isEmpty || mod.defs.contains(value) else { continue }
+            element.setStringValue(replacement, resolvingEntities: false)
+        }
+    }
+
+    private func isInsideAffectedNonHumanPawn(_ element: XMLElement, mod: ModScan) -> Bool {
         var current: XMLNode? = element
         while let node = current {
             if let candidate = node as? XMLElement,
-               isAffectedAnimalPawn(candidate, mod: mod) {
+               isAffectedNonHumanPawn(candidate, mod: mod) {
                 return true
             }
             current = node.parent

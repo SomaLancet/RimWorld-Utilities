@@ -302,7 +302,7 @@ final class RimWorldAnalyzerTests: XCTestCase {
         )
 
         let scan = try ModRemovalService().scan(saveURL: saveURL, modURL: modURL)
-        XCTAssertEqual(scan.defCount, 1)
+        XCTAssertEqual(scan.defCount, 4)
         XCTAssertEqual(scan.matchedDefCount, 1)
         XCTAssertGreaterThanOrEqual(scan.foreignReferenceCount, 3)
         XCTAssertTrue(scan.planItems.contains { $0.category == "Foreign references" })
@@ -746,6 +746,64 @@ final class RimWorldAnalyzerTests: XCTestCase {
         XCTAssertFalse(cleaned.contains("RemovedAnimalKind"))
         XCTAssertFalse(cleaned.contains("<kindDef>Colonist</kindDef>"))
         XCTAssertTrue(cleaned.contains("<selectedPawn>null</selectedPawn>"))
+    }
+
+    func testModRemovalPreservesHumanlikeModPawnAsBaselineHuman() throws {
+        let modsURL = root.appendingPathComponent("Mods", isDirectory: true)
+        let removedMod = try addMod(in: modsURL, folder: "Removed", packageId: "example.removed", name: "Removed Mod")
+        let defsURL = removedMod.appendingPathComponent("Defs", isDirectory: true)
+        try FileManager.default.createDirectory(at: defsURL, withIntermediateDirectories: true)
+        try write(
+            """
+            <Defs>
+              <ThingDef><defName>RemovedAlien</defName><race /></ThingDef>
+              <PawnKindDef><defName>RemovedAlienKind</defName></PawnKindDef>
+              <XenotypeDef><defName>RemovedXenotype</defName></XenotypeDef>
+              <GeneDef><defName>RemovedGene</defName></GeneDef>
+              <HediffDef><defName>RemovedHediff</defName></HediffDef>
+              <BodyTypeDef><defName>RemovedBody</defName></BodyTypeDef>
+              <HeadTypeDef><defName>RemovedHead</defName></HeadTypeDef>
+              <HairDef><defName>RemovedHair</defName></HairDef>
+              <ThingDef><defName>RemovedApparel</defName></ThingDef>
+            </Defs>
+            """,
+            to: defsURL.appendingPathComponent("Defs.xml")
+        )
+        try write(
+            """
+            <savegame><meta /><game>
+              <pawns><li Class="Pawn">
+                <def>RemovedAlien</def><id>Alien1</id><kindDef>RemovedAlienKind</kindDef><gender>Female</gender>
+                <name><first>Ada</first><nick>Ada</nick><last>Lovelace</last></name>
+                <story><bodyType>RemovedBody</bodyType><headType>RemovedHead</headType><hairDef>RemovedHair</hairDef></story>
+                <skills><skills><li><def>Intellectual</def><level>14</level></li></skills></skills>
+                <genes><endogenes><li><def>RemovedGene</def><loadID>7</loadID></li></endogenes><xenogenes /><xenotype>RemovedXenotype</xenotype></genes>
+                <health><hediffSet><hediffs><li Class="Hediff"><loadID>8</loadID><def>RemovedHediff</def></li></hediffs></hediffSet></health>
+                <apparel><wornApparel><innerList><li><def>RemovedApparel</def><id>Apparel1</id></li></innerList></wornApparel></apparel>
+              </li></pawns>
+              <selection><selectedPawn>Thing_Alien1</selectedPawn></selection>
+            </game></savegame>
+            """,
+            to: saveURL
+        )
+
+        let report = try ModRemovalService().clean(saveURL: saveURL, modURL: removedMod)
+        let cleanedURL = URL(fileURLWithPath: try XCTUnwrap(report.outputPath))
+        let document = try XMLDocument(contentsOf: cleanedURL, options: [])
+
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/pawns/li/def").first?.stringValue, "Human")
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/pawns/li/kindDef").first?.stringValue, "Colonist")
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/pawns/li/id").first?.stringValue, "Alien1")
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/pawns/li/name/nick").first?.stringValue, "Ada")
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/pawns/li/skills/skills/li/level").first?.stringValue, "14")
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/pawns/li/story/bodyType").first?.stringValue, "Female")
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/pawns/li/story/headType").first?.stringValue, "Female_AverageNormal")
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/pawns/li/story/hairDef").first?.stringValue, "Shaved")
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/pawns/li/genes/xenotype").first?.stringValue, "Baseline")
+        XCTAssertEqual(try document.nodes(forXPath: "/savegame/game/selection/selectedPawn").first?.stringValue, "Thing_Alien1")
+        XCTAssertTrue(try document.nodes(forXPath: "/savegame/game/pawns/li/genes/endogenes/li").isEmpty)
+        XCTAssertTrue(try document.nodes(forXPath: "/savegame/game/pawns/li/health/hediffSet/hediffs/li").isEmpty)
+        XCTAssertTrue(try document.nodes(forXPath: "/savegame/game/pawns/li/apparel/wornApparel/innerList/li").isEmpty)
     }
 
     func testModRemovalCleansGeneratedRaceDefsAndTheirDictionaryValues() throws {
