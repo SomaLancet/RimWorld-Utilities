@@ -6,9 +6,7 @@ These instructions apply to this repository for Codex, Claude Code, and other co
 
 - This is a macOS Swift/Xcode project named `RimWorld Utilities`.
 - Prefer Xcode-aware tools for build, diagnostics, and project context when they are available.
-- Keep changes narrowly scoped to the user's request.
 - Do not refactor unrelated code or rewrite existing architecture unless explicitly asked.
-- Preserve user changes. Do not revert files unless the user explicitly requests it.
 - Do not change intentionally disabled or placeholder UI into active behavior just to satisfy tests, previews, or refactoring convenience. If a test expects disabled UI to open or behave differently, treat that as a test mismatch: update the test only when appropriate, report it, or ask the user before changing product behavior.
 
 ## Search Tools
@@ -24,8 +22,6 @@ These instructions apply to this repository for Codex, Claude Code, and other co
 - Avoid custom layout code, custom drawing, custom controls, custom styling systems, and handmade UI behavior.
 - Do not build custom UI when a standard SwiftUI component can solve the task.
 - Minimize AppKit usage. Only use AppKit when SwiftUI has no suitable native solution.
-- Prefer existing project patterns and reuse existing views, components, and helpers where possible.
-- Follow Apple Human Interface Guidelines as much as possible.
 - Keep UI implementation simple, conventional, and maintainable.
 - Use `@State private var` for local SwiftUI state.
 - Prefer `let` for constants.
@@ -53,14 +49,9 @@ These instructions apply to this repository for Codex, Claude Code, and other co
 - After a successful `Release` build, replace `/Applications/RimWorld Utilities.app` with the fresh bundle so it is available in Applications. Never modify the installed app when the build fails, and report both the build artifact path and the installed path.
 - Do not perform visual verification or launch the app for verification unless the user explicitly requests it.
 - Do not create or run UI automation tests in this project. Validate changes with builds, diagnostics, and targeted unit tests only.
-- Mention clearly if validation could not be run.
 
 ## Communication
 
-- Be concise and direct.
 - Do not produce noisy status updates about missing tools when a known fallback exists.
 - When using shell commands, prefer the fewest useful commands.
-- Before making any file or code changes, first provide a concrete implementation plan and wait for explicit user approval. A request to fix, add, or change something does not itself count as approval to begin editing. Inspection and read-only diagnostics are allowed before approval; all write actions are prohibited.
-- For every requested change or new feature idea, first restate the task as understood, outline a short plan, and ask 1-3 clarifying questions or offer options when needed.
-- Wait for explicit user confirmation before editing files, changing code, running write actions, or making project changes.
-- After confirmation, implement the approved plan, validate the work as appropriate, and report the result clearly.
+- For every requested change or new feature idea, ask 1-3 clarifying questions or offer options when needed.
