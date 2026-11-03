@@ -6,34 +6,6 @@ It is written in Swift and AppKit and is self-contained.
 
 Repository: [SomaLancet/RimWorld-Utilities](https://github.com/SomaLancet/RimWorld-Utilities).
 
-## Requirements
-
-- macOS 14.0 or newer.
-- Xcode 26.5 or newer for development.
-- Git and standard macOS command-line tools for translation and mod operations.
-
-## Open In Xcode
-
-Open `RimWorld Utilities.xcodeproj`, select the `RimWorld Utilities` scheme,
-and use Run, Build, Test, or Archive.
-
-The project contains three targets:
-
-- `RimWorld Utilities`: the native macOS application.
-- `RimWorld UtilitiesTests`: unit tests for the analyzer and controllers.
-- `RimWorld UtilitiesUITests`: launch and navigation smoke tests.
-
-Local Debug builds use automatic ad-hoc signing. Release builds enable
-Hardened Runtime. Distribution outside the Mac App Store still requires an
-Apple Developer team, a Developer ID Application certificate, and
-notarization.
-
-Application versions are defined once in
-`Configuration/Version.xcconfig`:
-
-- `MARKETING_VERSION`: user-visible version.
-- `CURRENT_PROJECT_VERSION`: monotonically increasing build number.
-
 ## Application Features
 
 ### Diagnostics
@@ -106,19 +78,6 @@ Configuration/   Shared Xcode build configuration
 
 The Swift analyzer is the single diagnostics implementation and source of
 truth for the application.
-
-## Tests
-
-Run the Swift tests in Xcode with Product > Test or from the terminal:
-
-```bash
-xcodebuild \
-  -project "RimWorld Utilities.xcodeproj" \
-  -scheme "RimWorld Utilities" \
-  -configuration Debug \
-  -derivedDataPath .build/DerivedData \
-  test
-```
 
 ## Safety
 
