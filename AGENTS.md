@@ -32,19 +32,16 @@ These instructions apply to this repository for Codex, Claude Code, and other co
 
 ## Versioning
 
-- Use the project-specific `0.minor.patch` scheme, not strict Semantic Versioning. The established baseline is `0.13.1` with build number `21`.
-- Start a new minor number for a substantial feature or major fix that begins a distinct workstream. Reset the patch number to `0` when starting that workstream.
-- Increase the patch number for each completed application-code iteration in the same workstream, including its first iteration (`0.minor.1`). When a fix takes three distinct code-changing commits, its workstream reaches `0.minor.3`. A delivered but uncommitted iteration counts once; do not count it again when it is later committed.
-- Use the change's purpose to identify workstreams. A long gap between commits can indicate a new workstream, but dates alone do not determine the version.
-- Keep `MARKETING_VERSION` in `Configuration/Version.xcconfig` aligned with this scheme. Increase `CURRENT_PROJECT_VERSION` once for each newly delivered application bundle, regardless of how many commits it contains. Do not bump either value for documentation-only or test-only changes, failed builds, or repeated builds of unchanged application code.
-- Set the intended version before the Release build. If the build fails, do not install it or consume another build number on retry.
+- Follow the shared versioning instructions in `~/.codex/agent-guidance/versioning/index.md`.
+- The established baseline is `0.13.1` with build number `21`.
+- Store the project version in `MARKETING_VERSION` and the build number in `CURRENT_PROJECT_VERSION` in `Configuration/Version.xcconfig`.
 
 ## Application Delivery
 
 - Deliver the application as a fresh `.app` bundle and report its exact path.
-- Always build agent-generated app bundles into the single stable DerivedData directory `/Users/dieruki/Projects/RimWorld-Utilities/.build/CodexBuild`. Use `clean build` so the new bundle replaces the previous one. Never create build or DerivedData directories in `/tmp`, and never create timestamped or randomly named build directories.
-- Build agent-generated app bundles in the `Release` configuration unless the user explicitly requests a different configuration. Report the build artifact at `/Users/dieruki/Projects/RimWorld-Utilities/.build/CodexBuild/Build/Products/Release/RimWorld Utilities.app`.
-- After a successful `Release` build, replace `/Applications/RimWorld Utilities.app` with the fresh bundle so it is available in Applications. Never modify the installed app when the build fails, and report both the build artifact path and the installed path.
+- Keep intermediate build files and caches in the single stable DerivedData directory `/Users/dieruki/Projects/RimWorld-Utilities/.build/CodexBuild`. Never create build or DerivedData directories in `/tmp`, and never create timestamped or randomly named build directories.
+- Build agent-generated app bundles in the `Release` configuration unless the user explicitly requests a different configuration. Form the final app bundle directly at `/Applications/RimWorld Utilities.app`; do not create a local `.app` copy in the repository.
+- Report `/Applications/RimWorld Utilities.app` as the delivered application path only after a successful build. If the build fails, report the failure and do not present the installed app as an updated working build.
 - Do not create or run UI automation tests in this project. Available validation methods are builds, diagnostics, and targeted unit tests.
 
 ## Communication
